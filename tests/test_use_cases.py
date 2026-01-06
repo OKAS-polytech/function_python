@@ -1,4 +1,5 @@
-from othello import core
+from othello.use_cases import game_logic as core
+from othello.entities.game import GameState
 
 def test_create_initial_state():
     """
@@ -113,3 +114,45 @@ def test_check_game_over():
     final_state_draw = core.check_game_over(state_draw)
     assert final_state_draw.game_over is True
     assert final_state_draw.winner is None
+
+
+def test_get_valid_moves():
+    """
+    現在のプレイヤーが石を置ける有効な手のリストを取得できるかテストする
+    """
+    initial_state = core.create_initial_state()
+
+    # 初期盤面での黒の有効な手は4つ
+    valid_moves = core.get_valid_moves(initial_state)
+
+    # 座標は (row, col)
+    expected_moves = [(2, 3), (3, 2), (4, 5), (5, 4)] # d3, c4, f5, e6
+
+    # 順序は問わないため、ソートして比較
+    assert sorted(valid_moves) == sorted(expected_moves)
+
+
+def test_find_best_move():
+    """
+    コンピュータプレイヤーが最適手を見つけられるかテストする
+    """
+    # 特定の盤面を作成
+    # 白(W)が(0, 4)に置くと、(0, 3)の黒(B)を裏返して1枚獲得
+    # 白(W)が(2, 4)に置くと、(1, 4)の黒(B)を裏返して1枚獲得
+    # 白(W)が(4, 4)に置くと、(3, 4)と(2,4)の黒(B)を裏返して2枚獲得
+    # 最適手は(4, 4)
+    board_list = [
+        ["White", None, None, "Black", "White", None, None, None], # (0, 4)に蓋をするための白石
+        [None, None, None, None, "Black", None, None, None],
+        ["White", None, None, None, "Black", None, None, None],
+        [None, None, None, None, "Black", None, None, None],
+        [None, None, None, None, None, None, None, None], # (4, 4)が置けるように空にしておく
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+    ]
+    board = tuple(tuple(row) for row in board_list)
+    state = GameState(board=board, current_player="White")
+
+    best_move = core.find_best_move(state)
+    assert best_move == (4, 4)
